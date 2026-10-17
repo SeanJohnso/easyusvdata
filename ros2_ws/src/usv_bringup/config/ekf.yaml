@@ -20,7 +20,7 @@ ekf_local:
                   false, false, false,
                   false, false, true,
                   true,  true,  false]
-    imu0_remove_gravitational_acceleration: true
+    imu0_remove_gravitational_acceleration: false   # /bno055/imu is the chip's linear accel, gravity already removed
 
 # IMU + GPS. Publishes /odometry/global and TF map -> odom.
 ekf_global:
@@ -39,7 +39,7 @@ ekf_global:
                   false, false, false,
                   false, false, true,
                   true,  true,  false]
-    imu0_remove_gravitational_acceleration: true
+    imu0_remove_gravitational_acceleration: false   # /bno055/imu is the chip's linear accel, gravity already removed
 
     odom0: /odometry/gps          # GPS from navsat_transform, in metres
     odom0_config: [true,  true,  false,
