@@ -65,4 +65,4 @@ ros2 bag record -o ../data/run_$(date -u +%Y%m%dT%H%M%SZ) \
 ```
 
 Settings: magnetic declination 7.27° W (`-0.1269` rad) and `yaw_offset: 0` (IMU yaw 0 = east), in `config/navsat.yaml`.
-Sensor mounting offsets are zero (`localization.launch.py`).
+Sensor mounting offsets: `BNO055` and `GPS` at the top of `launch/localization.launch.py` (rebuild after editing).
