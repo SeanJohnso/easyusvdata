@@ -1,0 +1,10 @@
+# Claude Code project instructions (kept local, not shared)
+CLAUDE.md
+
+# Recorded sensor data
+/data/
+
+# colcon build outputs
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/

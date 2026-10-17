@@ -1,0 +1,7 @@
+# nmea_navsat_driver / nmea_serial_driver
+# GPS on the Pi 5 GPIO14 (TX) / GPIO15 (RX) UART.
+/gps/nmea_navsat_driver:   # namespace/node name from sensors.launch.py
+  ros__parameters:
+    port: /dev/ttyAMA0
+    baud: 9600
+    frame_id: gps

@@ -1,0 +1,9 @@
+# bno055 driver (flynneva/bno055), BNO055 over I2C on GPIO6 (SDA) / GPIO7 (SCL).
+# Needs `dtoverlay=i2c3-pi5` in /boot/firmware/config.txt. Check the bus
+# number with `i2cdetect -l` and set i2c_bus to match.
+bno055:
+  ros__parameters:
+    connection_type: i2c
+    i2c_bus: 3
+    i2c_addr: 0x28        # 0x29 if the breakout's ADR pin is pulled high
+    frame_id: bno055
