@@ -1,0 +1,49 @@
+# robot_localization ekf_node, two instances (see localization.launch.py).
+# *_config order: [x, y, z, roll, pitch, yaw,
+#                  vx, vy, vz, vroll, vpitch, vyaw,
+#                  ax, ay, az]
+
+# IMU only (dead reckoning). Publishes /odometry/local and TF odom -> base_link.
+ekf_local:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    imu0: /bno055/imu
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  true,  true,  false]
+    imu0_remove_gravitational_acceleration: true
+
+# IMU + GPS. Publishes /odometry/global and TF map -> odom.
+ekf_global:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map
+
+    imu0: /bno055/imu
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  true,  true,  false]
+    imu0_remove_gravitational_acceleration: true
+
+    odom0: /odometry/gps          # GPS from navsat_transform, in metres
+    odom0_config: [true,  true,  false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]

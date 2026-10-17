@@ -3,5 +3,5 @@
 /gps/nmea_navsat_driver:   # namespace/node name from sensors.launch.py
   ros__parameters:
     port: /dev/ttyAMA0
-    baud: 9600
+    baud: 38400
     frame_id: gps

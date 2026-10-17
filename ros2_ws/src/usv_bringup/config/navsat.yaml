@@ -1,0 +1,12 @@
+# robot_localization navsat_transform_node
+navsat_transform:
+  ros__parameters:
+    frequency: 30.0
+    delay: 3.0
+    magnetic_declination_radians: -0.1269   # 7.27 deg W (NOAA), east positive
+    yaw_offset: 0.0                         # IMU yaw already 0 = east
+    zero_altitude: true
+    use_odometry_yaw: false
+    wait_for_datum: false
+    broadcast_cartesian_transform: false
+    publish_filtered_gps: true              # /odometry/global as lat/lon on /gps/filtered

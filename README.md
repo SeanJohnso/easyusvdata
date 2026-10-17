@@ -42,3 +42,27 @@ IMU on its own:
 ros2 run bno055 bno055 --ros-args --params-file install/usv_bringup/share/usv_bringup/config/bno055.yaml
 ros2 run usv_bringup imu_euler     # optional, in a second terminal
 ```
+
+## Localization (robot_localization)
+
+Run alongside `sensors.launch.py`:
+```bash
+sudo apt install ros-jazzy-robot-localization
+ros2 launch usv_bringup localization.launch.py
+```
+
+| Output | Topic | Type |
+|---|---|---|
+| IMU dead reckoning | `/odometry/local` | `nav_msgs/Odometry` (x/y metres, `odom` frame) |
+| GPS positions | `/gps/fix` (raw lat/lon), `/odometry/gps` (x/y metres, `map` frame) | `NavSatFix`, `Odometry` |
+| EKF (IMU + GPS) | `/odometry/global` (x/y metres, `map` frame), `/gps/filtered` (lat/lon) | `Odometry`, `NavSatFix` |
+
+Record a run:
+```bash
+ros2 bag record -o ../data/run_$(date -u +%Y%m%dT%H%M%SZ) \
+  /odometry/local /odometry/global /odometry/gps /gps/fix /gps/filtered \
+  /bno055/imu /bno055/calib_status /tf /tf_static
+```
+
+Settings: magnetic declination 7.27° W (`-0.1269` rad) and `yaw_offset: 0` (IMU yaw 0 = east), in `config/navsat.yaml`.
+Sensor mounting offsets are zero (`localization.launch.py`).
