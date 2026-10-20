@@ -1,7 +1,31 @@
 # nmea_navsat_driver / nmea_serial_driver
 # GPS on the Pi 5 GPIO14 (TX) / GPIO15 (RX) UART.
+# Every parameter the node declares is listed. Values not set for this
+# project are the driver defaults. Source:
+# https://github.com/ros-drivers/nmea_navsat_driver/blob/ros2/src/libnmea_navsat_driver/driver.py
+# Keep each value's type (int vs float) as written, or the node fails to start.
 /gps/nmea_navsat_driver:   # namespace/node name from sensors.launch.py
   ros__parameters:
+    # Serial port (nmea_serial_driver.py)
     port: /dev/ttyAMA0
-    baud: 38400
+    baud: 38400               # default 4800
+
+    # Frames
     frame_id: gps
+    tf_prefix: ""             # prepended to frame_id
+
+    # Time
+    time_ref_source: gps      # written into /gps/time_reference source field
+    use_GNSS_time: false      # true: header.stamp from the GPS clock, not the Pi's
+    useRMC: false             # true: fix and velocity from RMC (no HDOP/covariance), not GGA/VTG
+
+    # Position sigma (m) per fix type = HDOP * epe_qualityN.
+    # N is the GGA fix quality: 1 GPS, 2 DGPS/SBAS, 4 RTK fixed, 5 RTK float,
+    # 9 WAAS; 0 = no fix. If the receiver sends GST sentences, its own lat/lon
+    # sigmas replace these (still multiplied by HDOP).
+    epe_quality0: 1000000     # integer in the driver
+    epe_quality1: 4.0
+    epe_quality2: 0.1
+    epe_quality4: 0.02
+    epe_quality5: 4.0
+    epe_quality9: 3.0

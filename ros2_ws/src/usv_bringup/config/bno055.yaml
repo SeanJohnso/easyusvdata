@@ -1,9 +1,51 @@
 # bno055 driver (flynneva/bno055), BNO055 over I2C on GPIO6 (SDA) / GPIO7 (SCL).
 # Needs `dtoverlay=i2c3-pi5` in /boot/firmware/config.txt. Check the bus
 # number with `i2cdetect -l` and set i2c_bus to match.
+# Every parameter the node declares is listed. Values not set for this
+# project are the driver defaults. Source:
+# https://github.com/flynneva/bno055/blob/main/bno055/params/NodeParameters.py
+# Keep each value's type (int vs float) as written, or the node fails to start.
 bno055:
   ros__parameters:
-    connection_type: i2c
-    i2c_bus: 3
-    i2c_addr: 0x28        # 0x29 if the breakout's ADR pin is pulled high
+    ros_topic_prefix: bno055/
+
+    # Connection
+    connection_type: i2c      # i2c or uart (default uart)
+    i2c_bus: 3                # default 0
+    i2c_addr: 0x28            # 0x29 if the breakout's ADR pin is pulled high
+    uart_port: /dev/ttyUSB0   # uart only
+    uart_baudrate: 115200     # uart only
+    uart_timeout: 0.1         # s, uart only
+
     frame_id: bno055
+
+    # Rates (Hz). data_query_frequency is an integer; the driver warns that
+    # around 30 Hz and above can overload the Python node.
+    data_query_frequency: 10
+    calib_status_frequency: 0.1
+
+    # Sensor setup
+    operation_mode: 12            # 12 (0x0C) NDOF, 9-axis fusion; 8 (0x08) IMUPLUS, no magnetometer
+    placement_axis_remap: P1      # P0..P7, BNO055 datasheet 3.4. Leave at P1 if the
+                                  # mounting rotation is in the launch file's BNO055 transform.
+
+    # Raw register value -> SI unit divisors (datasheet values for the default units)
+    acc_factor: 100.0             # LSB per m/s^2
+    mag_factor: 16000000.0        # LSB per T
+    gyr_factor: 900.0             # LSB per rad/s
+    grav_factor: 100.0            # LSB per m/s^2
+
+    # Calibration offsets written to the chip at start-up when set_offsets is true.
+    # Values come from the offset registers of a fully calibrated chip (datasheet 3.6.4).
+    set_offsets: false
+    offset_acc: [65516, 165, 65512]     # 0xFFEC, 0x00A5, 0xFFE8
+    offset_mag: [65460, 65182, 637]     # 0xFFB4, 0xFE9E, 0x027D
+    offset_gyr: [2, 65535, 65535]       # 0x0002, 0xFFFF, 0xFFFF
+    radius_acc: 1000                    # 0x3E8
+    radius_mag: 0
+
+    # Covariance diagonals written into the published messages. [x, y, z].
+    variance_acc: [0.017, 0.017, 0.017]              # (m/s^2)^2
+    variance_angular_vel: [0.04, 0.04, 0.04]         # (rad/s)^2
+    variance_orientation: [0.0159, 0.0159, 0.0159]   # rad^2, [roll, pitch, yaw]
+    variance_mag: [0.0, 0.0, 0.0]                    # T^2

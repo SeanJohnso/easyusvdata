@@ -1,12 +1,27 @@
 # robot_localization navsat_transform_node
+# Every non-deprecated parameter the node declares is listed. Values not set
+# for this project are the defaults. Source:
+# https://github.com/cra-ros-pkg/robot_localization/blob/jazzy-devel/src/navsat_transform.cpp
+# Keep each value's type (int vs float) as written, or the node fails to start.
 navsat_transform:
   ros__parameters:
-    frequency: 30.0
-    delay: 3.0
+    frequency: 30.0                         # Hz, default 10.0
+    delay: 3.0                              # s to wait before starting, default 0.0
+    transform_timeout: 0.0                  # s to wait for TF lookups
+
+    # Heading used to align the GPS (UTM) frame with the map frame
     magnetic_declination_radians: -0.1269   # 7.27 deg W (NOAA), east positive
     yaw_offset: 0.0                         # IMU yaw already 0 = east
-    zero_altitude: true
-    use_odometry_yaw: false
+    use_odometry_yaw: false                 # true: take heading from the EKF instead of the IMU
+
+    zero_altitude: true                     # default false
+    use_local_cartesian: false              # true: local ENU tangent plane instead of UTM
+
+    # Datum (where the map origin is). false: first GPS fix.
+    # true: also set  datum: [lat_deg, lon_deg, yaw_rad]
     wait_for_datum: false
-    broadcast_cartesian_transform: false
+
+    # Outputs
     publish_filtered_gps: true              # /odometry/global as lat/lon on /gps/filtered
+    broadcast_cartesian_transform: false    # publish UTM/local frame as TF
+    broadcast_cartesian_transform_as_parent_frame: false
