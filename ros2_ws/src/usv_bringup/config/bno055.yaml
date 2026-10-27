@@ -46,6 +46,6 @@ bno055:
 
     # Covariance diagonals written into the published messages. [x, y, z].
     variance_acc: [0.017, 0.017, 0.017]              # (m/s^2)^2
-    variance_angular_vel: [0.04, 0.04, 0.04]         # (rad/s)^2
+    variance_angular_vel: [0.0004, 0.0004, 0.0004]         # (rad/s)^2
     variance_orientation: [0.0159, 0.0159, 0.0159]   # rad^2, [roll, pitch, yaw]
     variance_mag: [0.0, 0.0, 0.0]                    # T^2

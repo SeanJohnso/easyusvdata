@@ -64,5 +64,18 @@ ros2 bag record -o ../data/run_$(date -u +%Y%m%dT%H%M%SZ) \
   /bno055/imu /bno055/calib_status /tf /tf_static
 ```
 
+Copy bags to the dev machine (run on the dev machine; wired link, use the Wi-Fi address if it's down):
+```bash
+rsync -avP bird@192.168.50.2:data/ ~/easyusvdata/postprocessing/data/
+```
+Keep the trailing `/` on both paths, or rsync nests the folder inside `data/`. Re-running only copies new bags.
+
+Process and view the maps (dev machine):
+```bash
+~/easyusvdata/postprocessing/run.sh
+cd ~/easyusvdata/postprocessing/output/<bag>
+google-chrome map_global.html map_local.html map_velocity.html
+```
+
 Settings: magnetic declination 7.27° W (`-0.1269` rad) and `yaw_offset: 0` (IMU yaw 0 = east), in `config/navsat.yaml`.
 Sensor mounting offsets: `BNO055` and `GPS` at the top of `launch/localization.launch.py` (rebuild after editing).

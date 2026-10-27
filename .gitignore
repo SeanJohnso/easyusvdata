@@ -11,3 +11,6 @@ ros2_ws/log/
 
 # Post-processing (dev machine only)
 /postprocessing/
+
+# RViz view (dev machine only)
+ros2_ws/src/processing/

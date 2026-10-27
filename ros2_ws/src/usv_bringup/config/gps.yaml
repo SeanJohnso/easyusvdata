@@ -24,8 +24,8 @@
     # 9 WAAS; 0 = no fix. If the receiver sends GST sentences, its own lat/lon
     # sigmas replace these (still multiplied by HDOP).
     epe_quality0: 1000000     # integer in the driver
-    epe_quality1: 4.0
-    epe_quality2: 0.1
+    epe_quality1: 2.217  # tuned a bit from testing with gps stats 
+    epe_quality2: 2.297
     epe_quality4: 0.02
     epe_quality5: 4.0
     epe_quality9: 3.0
