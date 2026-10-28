@@ -1,0 +1,171 @@
+# ublox_gps / ublox_gps_node (KumarRobotics ublox, ros2 branch)
+# SparkFun SAM-M8Q (u-blox M8, protocol 18) on the Pi 5 GPIO14 (TX) / GPIO15 (RX) UART.
+# Every parameter the node declares is listed. Values not set for this
+# project are the driver defaults. Source:
+# https://github.com/KumarRobotics/ublox/blob/ros2/ublox_gps/src/node.cpp (getRosParams)
+# Keep each value's type (int vs float) as written, or the node fails to start.
+# Parameters declared without a default are commented out: setting them
+# switches a feature on (USB port config, RTCM output, datum, base-station modes).
+/gps/ublox_gps_node:   # namespace/node name from sensors_ublox.launch.py
+  ros__parameters:
+    debug: 0                  # default 1 (logs every UBX message at DEBUG)
+
+    # Serial port. The driver sets the Pi side to uart1.baudrate and then sends
+    # CFG-PRT at that baud, so the module must already be at this baud.
+    # SAM-M8Q factory default is 9600.
+    device: /dev/ttyAMA0      # default /dev/ttyACM0
+    frame_id: gps
+    uart1:
+      baudrate: 9600
+      in: 7                   # UBX(1) | NMEA(2) | RTCM(4)
+      out: 1                  # UBX only. Adding NMEA(2) does not fit in 9600 baud at 5 Hz
+    usb:
+      # in:                   # no default; setting in/out configures the module's USB port
+      # out:
+      tx_ready: 0
+
+    # Rates. Measurement rate in Hz; nav_rate = measurement cycles per solution.
+    # SAM-M8Q max nav rate is 10 Hz. NAV-PVT (100 B) at 5 Hz is ~55% of 9600 baud.
+    rate: 5.0                 # default 4.0
+    nav_rate: 1
+
+    # Receiver configuration, sent on startup (the SAM-M8Q has no flash; its
+    # settings live in battery-backed RAM).
+    config_on_startup: true
+    clear_bbr: false
+    save_on_shutdown: false
+    load:
+      mask: 0
+      device: 0
+    save:
+      mask: 0
+      device: 0
+
+    gnss:                     # SAM-M8Q: up to 3 major constellations at once
+      gps: true
+      glonass: true           # default false
+      galileo: true           # default false
+      beidou: false
+      qzss: false
+      sbas: true              # default false (WAAS)
+      imes: false
+    sbas:
+      max: 0
+      usage: 0
+    dynamic_model: sea        # default portable
+    fix_mode: auto
+    dr_limit: 0
+    enable_ppp: false
+    use_adr: true             # only used by ADR/UDR products (M8U/M8L)
+
+    # RTCM output / base station (HPG products, not the SAM-M8Q)
+    # rtcm:
+    #   ids: []               # no default
+    #   rates: []
+    # dgnss_mode:             # no default
+    # tmode3:                 # no default
+    sv_in:
+      reset: true
+      min_dur: 0
+      acc_lim: 0.0
+    arp:
+      # position: []          # no default
+      # position_hp: []
+      acc: 0.0
+      lla_flag: false
+
+    # Map datum (default WGS84)
+    dat:
+      set: false
+      # majA:                 # no default; all five needed when dat.set is true
+      # flat:
+      # shift: []
+      # rot: []
+      # scale:
+
+    raw_data: false
+    raw_data_stream:
+      enable: false
+
+    # NMEA output settings (CFG-NMEA, only applied when nmea.set is true)
+    nmea:
+      set: false
+      compat: false
+      consider: false
+      limit82: false
+      high_prec: false
+      filter:
+        pos: false
+        msk_pos: false
+        time: false
+        date: false
+        sbas: false
+        track: false
+        gps_only: false
+      gnssToFilter:
+        gps: false
+        sbas: false
+        qzss: false
+        glonass: false
+        beidou: false
+
+    # Publishers. ~/fix and ~/fix_velocity are always published.
+    # nav.pvt -> /gps/ublox_gps_node/navpvt: every PVT field (fix type, numSV,
+    #   hAcc/vAcc/sAcc, pDOP, flags, UTC time) for module comparison.
+    # nav.sat -> /gps/navstate: per-satellite C/N0, elevation, used flag (every 20 solutions).
+    publish:
+      all: false
+      nav:
+        all: false
+        att: false
+        clock: false
+        cov: false
+        heading: false
+        posecef: false
+        posllh: false
+        pvt: true
+        relposned: false
+        sat: true
+        sol: false
+        svin: false
+        svinfo: false
+        status: false
+        timegps: false
+        timeutc: false
+        velned: false
+      rxm:
+        all: false
+        almRaw: false
+        eph: false
+        rtcm: false
+        raw: false
+        sfrb: false
+      aid:
+        all: false
+        alm: false
+        eph: false
+        hui: false
+      mon:
+        all: false
+        hw: false
+      tim:
+        tm2: false
+      nmea: false             # default true; no NMEA on the UART (uart1.out)
+      esf:                    # ESF/HNR only exist on ADR/UDR products
+        all: false            # default true
+        ins: false
+        meas: false
+        raw: false
+        status: false
+      hnr:
+        pvt: false            # default true
+
+    inf:
+      all: true
+      debug: false
+      error: true
+      notice: true
+      test: true
+      warning: true
+
+    diagnostic_period: 0.2
