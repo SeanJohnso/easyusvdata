@@ -7,10 +7,16 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import TimerAction
 from launch_ros.actions import Node
 import yaml
 
 CONFIG = os.path.join(get_package_share_directory('usv_bringup'), 'config')
+
+# Seconds between starting one module (driver + its static TFs) and the next.
+# Starting every node at once dipped the Pi's 5 V input low enough to cut power
+# (2026-11-22: ~4.9 V idle on this supply, undervoltage under a 2-core load).
+STAGGER = 1.0
 
 # IMU driver name in rig.yaml -> (package, executable, address parameter name)
 IMU_DRIVERS = {
@@ -47,10 +53,10 @@ def imu_node(driver, iid, bus, addr, frame):
 def generate_launch_description():
     with open(os.path.join(CONFIG, 'rig.yaml')) as f:
         rig = yaml.safe_load(f)
-    actions = []
+    modules = []   # one list of nodes per module, started STAGGER s apart
 
     for gid, g in rig['gps'].items():
-        actions.append(Node(
+        modules.append([Node(
             package='ublox_gps',
             executable='ublox_gps_node',
             name='ublox_gps_node',
@@ -61,15 +67,16 @@ def generate_launch_description():
                          'frame_id': f'gps_{gid}'}],
             remappings=[('~/fix', f'/gps/{gid}/fix'),
                         ('~/fix_velocity', f'/gps/{gid}/vel')],
-        ))
-        actions.append(static_tf(f'gps_{gid}', g['position']))
+        ), static_tf(f'gps_{gid}', g['position'])])
 
     for iid, m in rig['imu'].items():
-        actions.append(imu_node(m['driver'], iid, m['i2c_bus'], m['i2c_addr'], f'imu_{iid}'))
-        actions.append(static_tf(f'imu_{iid}', m['pose']))
+        nodes = [imu_node(m['driver'], iid, m['i2c_bus'], m['i2c_addr'], f'imu_{iid}'),
+                 static_tf(f'imu_{iid}', m['pose'])]
         if 'mag_driver' in m:
-            actions.append(imu_node(m['mag_driver'], iid, m['i2c_bus'], m['mag_i2c_addr'],
-                                    f'imu_{iid}_mag'))
-            actions.append(static_tf(f'imu_{iid}_mag', m['mag_pose']))
+            nodes += [imu_node(m['mag_driver'], iid, m['i2c_bus'], m['mag_i2c_addr'],
+                               f'imu_{iid}_mag'),
+                      static_tf(f'imu_{iid}_mag', m['mag_pose'])]
+        modules.append(nodes)
 
-    return LaunchDescription(actions)
+    return LaunchDescription([TimerAction(period=i * STAGGER, actions=nodes)
+                              for i, nodes in enumerate(modules)])
