@@ -1,0 +1,13 @@
+# mmc5983ma node (usv_bringup/mmc5983ma.py), MEMSIC MMC5983MA magnetometer
+# over I2C (on the ISM330DHCX + MMC5983MA board).
+# Every parameter the node declares is listed. Keep each value's type
+# (int vs float) as written, or the node fails to start.
+# i2c_bus, i2c_addr and frame_id are set by rig.launch.py from rig.yaml.
+#
+# Topic: mag (tesla, in the MMC5983MA's own axes; frame imu_<id>_mag).
+# Fixed in the node: 18-bit output, 100 Hz bandwidth (8 ms per measurement),
+# automatic SET/RESET before each measurement.
+/**:
+  ros__parameters:
+    rate: 50.0                # measurements per second; keep below ~100
+    variance_mag: [0.0, 0.0, 0.0]   # T^2, 0 = not measured yet

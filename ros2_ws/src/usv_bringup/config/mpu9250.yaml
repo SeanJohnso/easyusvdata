@@ -1,0 +1,36 @@
+# mpu9250 node (usv_bringup/mpu9250.py) for the "MPU9250/6500" breakout on
+# I2C bus 3 (GPIO6 SDA / GPIO7 SCL, dtoverlay=i2c3-pi5). Its chip reads
+# WHO_AM_I 0x70 (the MPU6500 ID) although it is marked MP92, and it has an
+# AK8963 magnetometer (WIA 0x48) at 0x0C, read through the MPU's I2C bypass.
+# Every parameter the node declares is listed. Keep each value's type
+# (int vs float) as written, or the node fails to start.
+#
+# Topics: /mpu9250/imu (accel + gyro, no orientation), /mpu9250/mag (tesla,
+# turned into the accel/gyro axes; only new, non-overflowed samples),
+# /mpu9250/temp (chip temperature, for bias-vs-temperature checks).
+/**:   # node imu/mpu9250/mpu9250, started by rig.launch.py
+  ros__parameters:
+    i2c_bus: 3   # overridden per module from rig.yaml
+    i2c_addr: 0x68   # overridden per module from rig.yaml
+    frame_id: mpu9250   # overridden per module from rig.yaml
+
+    # Polling rate (Hz). The chip samples at 1 kHz internally, so each read
+    # gets the newest filtered sample. The magnetometer runs at 100 Hz.
+    rate: 100.0
+
+    # Full scale. accel_range: 0 = ±2 g, 1 = ±4 g, 2 = ±8 g, 3 = ±16 g
+    #             gyro_range:  0 = ±250, 1 = ±500, 2 = ±1000, 3 = ±2000 deg/s
+    accel_range: 0
+    gyro_range: 0
+
+    # Low-pass filter, written to both CONFIG (gyro + temp) and ACCEL_CONFIG2
+    # (accel). Bandwidth gyro / accel in Hz:
+    # 0: 250/218  1: 184/218  2: 92/99  3: 41/45  4: 20/21  5: 10/10  6: 5/5
+    dlpf_cfg: 3
+
+    # Covariance diagonals written into the published messages. [x, y, z].
+    # 0 = not measured yet; set from a bench test before recording runs
+    # that will be used for EKF tuning (the values are baked into the bags).
+    variance_acc: [0.0, 0.0, 0.0]            # (m/s^2)^2
+    variance_angular_vel: [0.0, 0.0, 0.0]    # (rad/s)^2
+    variance_mag: [0.0, 0.0, 0.0]            # T^2

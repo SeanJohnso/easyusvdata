@@ -1,0 +1,25 @@
+# ism330dhcx node (usv_bringup/ism330dhcx.py), ST ISM330DHCX accel + gyro over I2C.
+# Used for both ISM330DHCX boards in rig.yaml (ism330_mmc, ism330_lis3).
+# Every parameter the node declares is listed. Keep each value's type
+# (int vs float) as written, or the node fails to start.
+# i2c_bus, i2c_addr and frame_id are set per module by rig.launch.py from rig.yaml.
+#
+# Topics: imu (accel + gyro, no orientation), temp. The chip's own filters are
+# left at their defaults (accel LPF1 at ODR/2, gyro LPF1 off).
+/**:
+  ros__parameters:
+    # Poll rate (Hz). Only samples the chip flags as new are published, so
+    # this must be faster than the ODR (published rate = ODR).
+    rate: 200.0
+
+    # Output data rate code for both accel and gyro (CTRL1_XL / CTRL2_G [7:4]):
+    # 1: 12.5 Hz  2: 26  3: 52  4: 104  5: 208  6: 416
+    odr: 4
+
+    accel_range: 0            # 0 = ±2 g, 1 = ±4 g, 2 = ±8 g, 3 = ±16 g
+    gyro_range: 0             # 0 = ±250, 1 = ±500, 2 = ±1000, 3 = ±2000, 4 = ±4000 deg/s
+
+    # Covariance diagonals written into the published messages. [x, y, z].
+    # 0 = not measured yet (set from the static test).
+    variance_acc: [0.0, 0.0, 0.0]            # (m/s^2)^2
+    variance_angular_vel: [0.0, 0.0, 0.0]    # (rad/s)^2

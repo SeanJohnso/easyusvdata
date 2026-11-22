@@ -5,19 +5,19 @@
 # project are the driver defaults. Source:
 # https://github.com/flynneva/bno055/blob/main/bno055/params/NodeParameters.py
 # Keep each value's type (int vs float) as written, or the node fails to start.
-bno055:
+/**:   # node imu/bno055/bno055, started by rig.launch.py
   ros__parameters:
-    ros_topic_prefix: bno055/
+    ros_topic_prefix: ''      # topics are relative to the namespace imu/bno055
 
     # Connection
     connection_type: i2c      # i2c or uart (default uart)
-    i2c_bus: 3                # default 0
-    i2c_addr: 0x28            # 0x29 if the breakout's ADR pin is pulled high
+    i2c_bus: 3   # overridden per module from rig.yaml
+    i2c_addr: 0x28   # overridden per module from rig.yaml
     uart_port: /dev/ttyUSB0   # uart only
     uart_baudrate: 115200     # uart only
     uart_timeout: 0.1         # s, uart only
 
-    frame_id: bno055
+    frame_id: bno055   # overridden per module from rig.yaml
 
     # Rates (Hz). data_query_frequency is an integer; the driver warns that
     # around 30 Hz and above can overload the Python node.

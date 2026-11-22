@@ -3,7 +3,7 @@
 <package format="3">
   <name>usv_bringup</name>
   <version>0.1.0</version>
-  <description>Launches the GPS (nmea_navsat_driver) and BNO055 IMU (bno055) drivers, plus an IMU roll/pitch/yaw diagnostic topic.</description>
+  <description>Launches every GPS and IMU module of the test rig (config/rig.yaml) and a status check node.</description>
   <maintainer email="seanjohnson0807@gmail.com">Sean Johnson</maintainer>
   <license>MIT</license>
 
@@ -11,9 +11,12 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>nmea_navsat_driver</exec_depend>
   <exec_depend>ublox_gps</exec_depend>
   <exec_depend>bno055</exec_depend>
+  <exec_depend>icm20948_ros2</exec_depend>
+  <exec_depend>python3-smbus2</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 

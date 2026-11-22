@@ -1,0 +1,34 @@
+GPS:
+
+Module 1: SAM-M8Q
+https://www.sparkfun.com/sparkfun-gnss-receiver-sam-m8q-qwiic.html
+
+Module 2: SAM-M10Q
+https://www.sparkfun.com/sparkfun-gps-breakout-chip-antenna-sam-m10q-qwiic.html
+
+Module 3: M10-25Q
+https://a.co/d/0htq2hv4
+
+Module 4: NEO-F10N  (this one needs an antenna)
+https://a.co/d/0aut9nkI
+
+Module 5: Micro M10 
+https://www.getfpv.com/holybro-micro-m10-gps-w-case.html
+
+
+IMU:
+
+Module 1: ISM330DHCX, MMC5983MA
+https://a.co/d/06B3B6W8
+
+Module 2: ICM-20948
+https://a.co/d/0hNxWCwL
+
+Module 3: MPU9250
+https://a.co/d/04EopHae
+
+Module 4: BNO055
+https://a.co/d/0hYFAmIF
+
+Module 5: ISM330DHCX, LIS3MDL
+https://www.adafruit.com/product/4569 

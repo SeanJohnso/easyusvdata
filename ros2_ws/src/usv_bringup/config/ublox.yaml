@@ -6,17 +6,17 @@
 # Keep each value's type (int vs float) as written, or the node fails to start.
 # Parameters declared without a default are commented out: setting them
 # switches a feature on (USB port config, RTCM output, datum, base-station modes).
-/gps/ublox_gps_node:   # namespace/node name from sensors_ublox.launch.py
+/**:   # one node per u-blox module in rig.yaml (namespace gps/<id>)
   ros__parameters:
     debug: 0                  # default 1 (logs every UBX message at DEBUG)
 
     # Serial port. The driver sets the Pi side to uart1.baudrate and then sends
     # CFG-PRT at that baud, so the module must already be at this baud.
     # SAM-M8Q factory default is 9600.
-    device: /dev/ttyAMA0      # default /dev/ttyACM0
-    frame_id: gps
+    device: /dev/ttyAMA0   # overridden per module from rig.yaml
+    frame_id: gps   # overridden per module from rig.yaml
     uart1:
-      baudrate: 9600
+      baudrate: 9600   # overridden per module from rig.yaml
       in: 7                   # UBX(1) | NMEA(2) | RTCM(4)
       out: 1                  # UBX only. Adding NMEA(2) does not fit in 9600 baud at 5 Hz
     usb:

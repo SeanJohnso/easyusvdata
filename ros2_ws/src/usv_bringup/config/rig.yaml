@@ -1,0 +1,92 @@
+# Test rig: every GPS and IMU module, how it is wired, and where it sits.
+# rig.launch.py starts one driver per entry from this file, the check node
+# watches every entry, and postprocessing reads it from the repo.
+#
+# Topics:  /gps/<id>/fix, /gps/<id>/vel, /gps/<id>/ublox_gps_node/navpvt, /gps/<id>/navstate
+#          /imu/<id>/imu, /imu/<id>/mag (+ /imu/<id>/temp, BNO055 extras)
+# Frames:  gps_<id>, imu_<id>, imu_<id>_mag (only for a separate magnetometer chip)
+#
+# Poses are relative to base_link: metres, x forward / y left / z up (REP-103),
+# angles in radians (roll, pitch, yaw = how the board's axes are turned).
+# TODO: every pose below is a placeholder (0.0) until the rig is measured.
+#
+# Ports and addresses are the planned wiring. Confirm with `ls -l /dev/ttyAMA*`
+# and `i2cdetect -y <bus>` once the rig is wired.
+#
+# Address plan. Two I2C buses are free with all five UARTs in use:
+#   bus 1 (GPIO2/3):  icm20948 0x68 (+ its AK09916 at 0x0C), ism330_mmc 0x6B + 0x30
+#   bus 3 (GPIO6/7):  mpu9250 0x68 (+ its AK8963 at 0x0C), ism330_lis3 0x6A + 0x1C (bno055 0x28 left out)
+# The two AK magnetometers both sit at 0x0C, so the ICM and MPU must be on
+# different buses. The two ISM330DHCX are put on different buses too.
+
+gps:
+  sam_m8q:
+    model: SparkFun SAM-M8Q (u-blox M8)
+    config: ublox.yaml
+    device: /dev/ttyAMA0      # uart0, GPIO14/15
+    baud: 9600
+    position: [0.0, 0.0, 0.0]   # TODO x, y, z
+  sam_m10q:
+    model: SparkFun SAM-M10Q (u-blox M10)
+    config: ublox_m10.yaml
+    device: /dev/ttyAMA1      # TODO check name; uart1, GPIO0/1
+    baud: 38400
+    position: [0.0, 0.0, 0.0]   # TODO
+  m10_25q:
+    model: M10-25Q (u-blox M10, 25 mm patch)
+    config: ublox_m10.yaml
+    device: /dev/ttyAMA2      # TODO check name; uart2, GPIO4/5
+    baud: 38400               # TODO factory baud unknown
+    position: [0.0, 0.0, 0.0]   # TODO
+  neo_f10n:
+    model: NEO-F10N (u-blox F10, L1/L5) + active antenna
+    config: ublox_m10.yaml    # TODO not tested on the F10 yet
+    device: /dev/ttyAMA3      # TODO check name; uart3, GPIO8/9
+    baud: 38400               # TODO factory baud unknown
+    position: [0.0, 0.0, 0.0]   # TODO antenna position, not the board
+  micro_m10:
+    model: Holybro Micro M10 (u-blox M10)
+    config: ublox_m10.yaml
+    device: /dev/ttyAMA4      # TODO check name; uart4, GPIO12/13
+    baud: 38400               # TODO factory baud unknown
+    position: [0.0, 0.0, 0.0]   # TODO
+
+imu:
+  ism330_mmc:
+    model: ISM330DHCX + MMC5983MA
+    driver: ism330dhcx
+    i2c_bus: 1
+    i2c_addr: 0x6B            # TODO 0x6A or 0x6B depending on the board's jumper
+    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO x, y, z, roll, pitch, yaw
+    mag_driver: mmc5983ma
+    mag_i2c_addr: 0x30
+    mag_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # TODO magnetometer chip axes
+  icm20948:
+    model: ICM-20948
+    driver: icm20948
+    i2c_bus: 1
+    i2c_addr: 0x68            # TODO 0x69 if AD0 is high
+    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
+  mpu9250:
+    model: MPU9250 (MPU6500 + AK8963)
+    driver: mpu9250
+    i2c_bus: 3
+    i2c_addr: 0x68
+    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
+  # BNO055 left out (2026-11-21): neither BNO055 board answers on the rig (new board: no
+  # reply at 0x28/0x29; old Adafruit board: GND pin read 3.3 V). Uncomment to bring it back.
+  # bno055:
+  #   model: BNO055
+  #   driver: bno055
+  #   i2c_bus: 3
+  #   i2c_addr: 0x28
+  #   pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
+  ism330_lis3:
+    model: Adafruit 4569, ISM330DHCX + LIS3MDL
+    driver: ism330dhcx
+    i2c_bus: 3
+    i2c_addr: 0x6A            # Adafruit default
+    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO
+    mag_driver: lis3mdl
+    mag_i2c_addr: 0x1C        # Adafruit default
+    mag_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # TODO magnetometer chip axes

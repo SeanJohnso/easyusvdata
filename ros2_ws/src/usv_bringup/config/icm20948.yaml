@@ -1,0 +1,19 @@
+# icm20948_ros2 / icm20948_raw (furbrain/icm20948_ros2, built from source in
+# ros2_ws/src), GY-ICM20948V2 breakout over I2C.
+# Every parameter the node declares is listed. Values not set for this
+# project are the driver defaults. Source:
+# https://github.com/furbrain/icm20948_ros2/blob/main/src/icm20948_raw.cpp
+# Keep each value's type (int vs float) as written, or the node fails to start.
+#
+# Fixed in the driver (not parameters): accel/gyro sampled at 225 Hz with the
+# digital low-pass filter off, published at 200 Hz; magnetometer (AK09916) at
+# 100 Hz in passthrough mode, its axes already turned to match the accel/gyro.
+# No orientation is published, and every covariance in the messages is 0.
+/**:   # node imu/icm20948/icm20948, started by rig.launch.py
+  ros__parameters:
+    i2c_bus: 3   # overridden per module from rig.yaml
+    i2c_address: 0x68   # overridden per module from rig.yaml
+    frame_id: icm20948   # overridden per module from rig.yaml
+    gyro_fss: 2000            # deg/s full scale: 250, 500, 1000 or 2000 (default 2000)
+    acc_fss: 4                # g full scale: 2, 4, 8 or 16 (default 4)
+    odr: 50                   # only range-checked (1-225); the raw node ignores it (default 50)

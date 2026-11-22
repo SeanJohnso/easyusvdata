@@ -207,7 +207,9 @@ ekf_global:
                   false, false,  true,   # roll, pitch, yaw  (roll, pitch ignored in 2D)
                   false, false, false,   # vx, vy, vz  (Imu has no linear velocity)
                   false, false,  true,   # vroll, vpitch, vyaw
-                  true,  true, false]   # ax, ay, az  (az ignored in 2D)
+                  false, false, false]   # ax, ay, az  off: BNO055 accel bias (~0.06 m/s^2) integrated
+                                         # between GPS fixes gave a sawtooth track (replay 2026-11-02,
+                                         # M8 square: 0.95 m cross-track RMS with ax/ay on, 0.31 m off)
     imu0_remove_gravitational_acceleration: false   # /bno055/imu is the chip's linear accel, gravity already removed
     imu0_differential: false        # true: fuse changes between messages instead of absolute values
     imu0_relative: false            # true: values relative to the first message

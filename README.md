@@ -2,31 +2,44 @@
 
 Sensor bringup for USV sensor evaluation on a Raspberry Pi 5 (Ubuntu 24.04, ROS 2 Jazzy).
 
-`ros2_ws/src/usv_bringup` launches existing drivers:
+`ros2_ws/src/usv_bringup` runs the module test rig: every GPS and IMU module at once,
+listed in `config/rig.yaml` (ports, buses, addresses, mounting poses).
 
-| Sensor | Driver | Topics |
+| Modules | Driver | Topics |
 |---|---|---|
-| GPS (UART, `/dev/ttyAMA0`, 9600) | `nmea_navsat_driver` / `nmea_serial_driver` | `/gps/fix`, `/gps/vel`, `/gps/time_reference`, `/gps/heading` |
-| BNO055 (I2C on GPIO6/7) | `bno055` | `/bno055/imu`, `/bno055/imu_raw`, `/bno055/mag`, `/bno055/grav`, `/bno055/temp`, `/bno055/calib_status` |
-| (diagnostic) | `usv_bringup/imu_euler` | `/bno055/euler_deg` (x=roll, y=pitch, z=yaw, degrees) |
+| 5 u-blox GPS (UART) | `ublox_gps` (one node per module) | `/gps/<id>/fix`, `/gps/<id>/vel`, `/gps/<id>/ublox_gps_node/navpvt`, `/gps/<id>/navstate` |
+| BNO055 | `bno055` | `/imu/bno055/imu` (fused), `/imu/bno055/imu_raw`, `/imu/bno055/mag`, ... |
+| ICM-20948 | `icm20948_ros2` | `/imu/icm20948/imu`, `/imu/icm20948/mag` |
+| MPU9250 | `usv_bringup/mpu9250` | `/imu/mpu9250/imu`, `/mag`, `/temp` |
+| ISM330DHCX + MMC5983MA / LIS3MDL | `usv_bringup/ism330dhcx` + `mmc5983ma` / `lis3mdl` | `/imu/<id>/imu`, `/imu/<id>/temp`, `/imu/<id>/mag` |
+
+Frames: `gps_<id>`, `imu_<id>`, and `imu_<id>_mag` for separate magnetometer chips, each a
+static TF from `base_link` with the pose in `rig.yaml`.
 
 ## Setup (once, on the Pi)
 
 ```bash
-sudo apt install ros-jazzy-nmea-navsat-driver ros-jazzy-bno055 i2c-tools
+sudo apt install ros-jazzy-ublox-gps ros-jazzy-bno055 python3-smbus2 i2c-tools
 ```
+`icm20948_ros2` is built from source in `ros2_ws/src` (see CLAUDE.md, IMU section).
 
-In `/boot/firmware/config.txt`:
+In `/boot/firmware/config.txt` (check pins and names in `/boot/firmware/overlays/README`):
 ```
-dtparam=uart0=on
-dtoverlay=i2c3-pi5      # I2C3 on GPIO6 (SDA) / GPIO7 (SCL)
+dtparam=uart0=on            # GPIO14/15 -> /dev/ttyAMA0
+dtoverlay=uart1-pi5         # GPIO0/1
+dtoverlay=uart2-pi5         # GPIO4/5
+dtoverlay=uart3-pi5         # GPIO8/9
+dtoverlay=uart4-pi5         # GPIO12/13
+dtparam=i2c_arm=on          # bus 1, GPIO2/3
+dtparam=i2c_arm_baudrate=400000
+dtoverlay=i2c3-pi5          # bus 3, GPIO6/7
 ```
-Reboot, then check the bus number and that the BNO055 shows up at 0x28:
+Reboot, then check the device names and addresses against `rig.yaml`:
 ```bash
-i2cdetect -l
+ls -l /dev/ttyAMA*
+i2cdetect -y 1
 i2cdetect -y 3
 ```
-Set `i2c_bus` in `config/bno055.yaml` if it isn't 3.
 
 ## Build and run
 
@@ -34,16 +47,23 @@ Set `i2c_bus` in `config/bno055.yaml` if it isn't 3.
 cd ros2_ws
 colcon build --packages-select usv_bringup
 source install/setup.bash
-ros2 launch usv_bringup sensors.launch.py
+ros2 launch usv_bringup rig.launch.py
+ros2 run usv_bringup check          # second terminal: status table every 2 s
 ```
 
-IMU on its own:
+`check` columns: `driver` OK / STALE (nothing for 2 s) / NO DATA, message `rate`, GPS `fix`,
+and `pi-gps` = Pi clock minus the GPS-time stamp. A few hundredths of a second is
+normal latency; seconds or more means the Pi clock is wrong (fix it before recording).
+
+Record a test:
 ```bash
-ros2 run bno055 bno055 --ros-args --params-file install/usv_bringup/share/usv_bringup/config/bno055.yaml
-ros2 run usv_bringup imu_euler     # optional, in a second terminal
+ros2 bag record -o ~/data/<static|dynamic>_$(date -u +%Y%m%dT%H%M%SZ) -e '/(gps|imu)/.*' /tf_static /mark
 ```
 
-## Localization (robot_localization)
+## Localization (robot_localization, old single-module setup)
+
+`localization.launch.py` still uses the old `/bno055/imu` and `/gps/fix` topics; it will be
+replaced by the dynamic-test replay.
 
 Run alongside `sensors.launch.py`:
 ```bash

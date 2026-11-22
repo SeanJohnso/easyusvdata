@@ -18,11 +18,15 @@ setup(
     zip_safe=True,
     maintainer='Sean Johnson',
     maintainer_email='seanjohnson0807@gmail.com',
-    description='GPS + BNO055 IMU bringup',
+    description='GPS and IMU module test rig bringup',
     license='MIT',
     entry_points={
         'console_scripts': [
-            'imu_euler = usv_bringup.imu_euler:main',
+            'check = usv_bringup.check:main',
+            'ism330dhcx = usv_bringup.ism330dhcx:main',
+            'lis3mdl = usv_bringup.lis3mdl:main',
+            'mmc5983ma = usv_bringup.mmc5983ma:main',
+            'mpu9250 = usv_bringup.mpu9250:main',
         ],
     },
 )

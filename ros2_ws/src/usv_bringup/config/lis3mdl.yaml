@@ -1,0 +1,13 @@
+# lis3mdl node (usv_bringup/lis3mdl.py), ST LIS3MDL magnetometer over I2C
+# (on the Adafruit 4569 board with an ISM330DHCX).
+# Every parameter the node declares is listed. Keep each value's type
+# (int vs float) as written, or the node fails to start.
+# i2c_bus, i2c_addr and frame_id are set by rig.launch.py from rig.yaml.
+#
+# Topic: mag (tesla, in the LIS3MDL's own axes; frame imu_<id>_mag).
+# Fixed in the node: 80 Hz, ultra-high-performance mode on all axes.
+/**:
+  ros__parameters:
+    rate: 100.0               # poll rate (Hz); only new samples are published (80 Hz)
+    mag_range: 0              # 0 = ±4, 1 = ±8, 2 = ±12, 3 = ±16 gauss
+    variance_mag: [0.0, 0.0, 0.0]   # T^2, 0 = not measured yet
