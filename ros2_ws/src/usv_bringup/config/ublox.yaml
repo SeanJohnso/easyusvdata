@@ -1,5 +1,13 @@
-# ublox_gps / ublox_gps_node (KumarRobotics ublox, ros2 branch)
-# SparkFun SAM-M8Q (u-blox M8, protocol 18) on the Pi 5 GPIO14 (TX) / GPIO15 (RX) UART.
+# ublox_gps / ublox_gps_node (KumarRobotics ublox, ros2 branch), used for all
+# five u-blox modules in rig.yaml (M8, M10s, F10).
+#
+# The driver does NOT configure the modules (config_on_startup: false): it only
+# opens the port at uart1.baudrate and publishes what arrives. tools/gps_setup.py
+# sets each module up once per session (115200 baud, UBX + NMEA, 5 Hz, sea model,
+# NAV-PVT, NAV-SAT 1 Hz, NMEA GGA/RMC/GST; constellations left at factory). This
+# works the same on every module, including the M10/F10 that NAK the driver's
+# CFG-GNSS writes. The gnss.*, sbas.*, dynamic_model, rate and save/load settings
+# below are therefore not sent; they are kept for reference.
 # Every parameter the node declares is listed. Values not set for this
 # project are the driver defaults. Source:
 # https://github.com/KumarRobotics/ublox/blob/ros2/ublox_gps/src/node.cpp (getRosParams)
@@ -10,28 +18,26 @@
   ros__parameters:
     debug: 0                  # default 1 (logs every UBX message at DEBUG)
 
-    # Serial port. The driver sets the Pi side to uart1.baudrate and then sends
-    # CFG-PRT at that baud, so the module must already be at this baud.
-    # SAM-M8Q factory default is 9600.
+    # Serial port. With config_on_startup false the driver only sets the Pi side
+    # to uart1.baudrate (115200 after gps_setup.py).
     device: /dev/ttyAMA0   # overridden per module from rig.yaml
     frame_id: gps   # overridden per module from rig.yaml
     uart1:
-      baudrate: 9600   # overridden per module from rig.yaml
+      baudrate: 115200   # overridden per module from rig.yaml
       in: 7                   # UBX(1) | NMEA(2) | RTCM(4)
-      out: 1                  # UBX only. Adding NMEA(2) does not fit in 9600 baud at 5 Hz
+      out: 3                  # UBX(1) | NMEA(2); only sent when config_on_startup is true
     usb:
       # in:                   # no default; setting in/out configures the module's USB port
       # out:
       tx_ready: 0
 
     # Rates. Measurement rate in Hz; nav_rate = measurement cycles per solution.
-    # SAM-M8Q max nav rate is 10 Hz. NAV-PVT (100 B) at 5 Hz is ~55% of 9600 baud.
+    # Only used for the driver's frequency diagnostics when not configuring.
     rate: 5.0                 # default 4.0
     nav_rate: 1
 
-    # Receiver configuration, sent on startup (the SAM-M8Q has no flash; its
-    # settings live in battery-backed RAM).
-    config_on_startup: true
+    # Receiver configuration on startup: off, done by tools/gps_setup.py instead.
+    config_on_startup: false  # default true
     clear_bbr: false
     save_on_shutdown: false
     load:
@@ -150,7 +156,7 @@
         hw: false
       tim:
         tm2: false
-      nmea: false             # default true; no NMEA on the UART (uart1.out)
+      nmea: true              # -> /gps/<id>/ublox_gps_node/nmea (nmea_msgs/Sentence, Pi-clock stamp): GGA, RMC, GST
       esf:                    # ESF/HNR only exist on ADR/UDR products
         all: false            # default true
         ins: false

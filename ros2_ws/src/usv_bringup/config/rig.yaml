@@ -6,9 +6,9 @@
 #          /imu/<id>/imu, /imu/<id>/mag (+ /imu/<id>/temp, BNO055 extras)
 # Frames:  gps_<id>, imu_<id>, imu_<id>_mag (only for a separate magnetometer chip)
 #
-# Poses are relative to base_link: metres, x forward / y left / z up (REP-103),
+# Poses are relative to base_link: metres (measured in cm, converted 2026-11-22), x forward / y left / z up (REP-103),
 # angles in radians (roll, pitch, yaw = how the board's axes are turned).
-# TODO: every pose below is a placeholder (0.0) until the rig is measured.
+# Rotations checked on the rig 2026-11-22 (hand rotation: accel, gyro and mag agree).
 #
 # Ports and addresses are the planned wiring. Confirm with `ls -l /dev/ttyAMA*`
 # and `i2cdetect -y <bus>` once the rig is wired.
@@ -24,32 +24,35 @@ gps:
     model: SparkFun SAM-M8Q (u-blox M8)
     config: ublox.yaml
     device: /dev/ttyAMA0      # uart0, GPIO14/15
-    baud: 9600
-    position: [0.0, 0.0, 0.0]   # TODO x, y, z
+    baud: 115200              # set by tools/gps_setup.py. 2026-11-22 factory state: 9600 NMEA 1 Hz, GPS+GLO (earlier config lost)
+    position: [-0.11, -0.03, 0.0]   # TODO x, y, z
   sam_m10q:
     model: SparkFun SAM-M10Q (u-blox M10)
-    config: ublox_m10.yaml
-    device: /dev/ttyAMA1      # TODO check name; uart1, GPIO0/1
-    baud: 38400
-    position: [0.0, 0.0, 0.0]   # TODO
+    config: ublox.yaml
+    device: /dev/ttyAMA1      # uart1 (name checked 2026-11-22), GPIO0/1
+    baud: 115200              # set by tools/gps_setup.py. 2026-11-22 factory state: 9600 NMEA 1 Hz, GPS+GLO+GAL+BDS+QZSS (BBR settings lost)
+    position: [-0.11, 0.04, 0.0]   # TODO
   m10_25q:
     model: M10-25Q (u-blox M10, 25 mm patch)
-    config: ublox_m10.yaml
-    device: /dev/ttyAMA2      # TODO check name; uart2, GPIO4/5
-    baud: 38400               # TODO factory baud unknown
-    position: [0.0, 0.0, 0.0]   # TODO
+    driver: nmea              # nmea_navsat_driver; the others default to the ublox driver
+    config: gps.yaml
+    device: /dev/ttyAMA2      # uart2 (name checked 2026-11-22), GPIO4/5
+    baud: 38400               # factory: NMEA 1 Hz, GPS+GAL+BDS+QZSS. Its UART RX disables itself
+                              # at power-up (>100 frame errors), so it can't be configured and
+                              # gps_setup.py skips it. Switch back to ublox once that's fixed.
+    position: [-0.22, 0.01, 0.0]   # TODO
   neo_f10n:
     model: NEO-F10N (u-blox F10, L1/L5) + active antenna
-    config: ublox_m10.yaml    # TODO not tested on the F10 yet
-    device: /dev/ttyAMA3      # TODO check name; uart3, GPIO8/9
-    baud: 38400               # TODO factory baud unknown
-    position: [0.0, 0.0, 0.0]   # TODO antenna position, not the board
+    config: ublox.yaml
+    device: /dev/ttyAMA3      # uart3 (name checked 2026-11-22), GPIO8/9
+    baud: 115200              # set by tools/gps_setup.py. Factory 38400 NMEA 1 Hz, GPS+GAL+BDS, no GLONASS seen (2026-11-22)
+    position: [-0.22, -0.1, 0.0]   # TODO antenna position, not the board
   micro_m10:
     model: Holybro Micro M10 (u-blox M10)
-    config: ublox_m10.yaml
-    device: /dev/ttyAMA4      # TODO check name; uart4, GPIO12/13
-    baud: 38400               # TODO factory baud unknown
-    position: [0.0, 0.0, 0.0]   # TODO
+    config: ublox.yaml
+    device: /dev/ttyAMA4      # uart4, GPIO12/13 (checked 2026-11-22)
+    baud: 115200              # set by tools/gps_setup.py. Factory: 115200 NMEA 5 Hz, GPS+GLO+GAL+BDS+QZSS (2026-11-22)
+    position: [-0.22, 0.09, 0.0]   # TODO
 
 imu:
   ism330_mmc:
@@ -57,22 +60,22 @@ imu:
     driver: ism330dhcx
     i2c_bus: 1
     i2c_addr: 0x6B            # TODO 0x6A or 0x6B depending on the board's jumper
-    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO x, y, z, roll, pitch, yaw
+    pose: [-0.03, 0.095, 0.0, 0.0, 0.0, 0.0]       # TODO x, y, z, roll, pitch, yaw
     mag_driver: mmc5983ma
     mag_i2c_addr: 0x30
-    mag_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # TODO magnetometer chip axes
+    mag_pose: [-0.03, 0.095, 0.0, 0.0, 0.0, 0.0]   # chip is left-handed (z down); the driver negates z, so = board axes (checked 2026-11-22)
   icm20948:
     model: ICM-20948
     driver: icm20948
     i2c_bus: 1
     i2c_addr: 0x68            # TODO 0x69 if AD0 is high
-    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
+    pose: [-0.01, 0.05, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
   mpu9250:
     model: MPU9250 (MPU6500 + AK8963)
     driver: mpu9250
     i2c_bus: 3
     i2c_addr: 0x68
-    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
+    pose: [-0.01, -0.03, 0.0, 0.0, 0.0, 0.0]       # TODO (mag already in accel/gyro axes)
   # BNO055 left out (2026-11-21): neither BNO055 board answers on the rig (new board: no
   # reply at 0x28/0x29; old Adafruit board: GND pin read 3.3 V). Uncomment to bring it back.
   # bno055:
@@ -86,7 +89,7 @@ imu:
     driver: ism330dhcx
     i2c_bus: 3
     i2c_addr: 0x6A            # Adafruit default
-    pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]       # TODO
+    pose: [-0.03, 0.0, 0.0, 0.0, 0.0, 1.5708]       # TODO
     mag_driver: lis3mdl
     mag_i2c_addr: 0x1C        # Adafruit default
-    mag_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # TODO magnetometer chip axes
+    mag_pose: [-0.03, 0.0, 0.0, 0.0, 0.0, 1.5708]   # same axes as the ISM330 (checked 2026-11-22)

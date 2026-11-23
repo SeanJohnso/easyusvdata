@@ -57,8 +57,10 @@ def parse_mag(buf, asa):
         return None
     # 16-bit output: 0.15 uT/LSB, times the factory adjustment
     hx, hy, hz = (h * 0.15e-6 * ((a - 128) / 256.0 + 1.0) for h, a in zip((hx, hy, hz), asa))
-    # AK8963 x/y are swapped and z is flipped relative to the accel/gyro axes
-    return hy, hx, -hz
+    # Into the accel/gyro axes. The MPU-9250 datasheet mapping (hy, hx, -hz) is wrong
+    # for this board (MPU6500 + separate AK8963): on the rig (2026-11-22) it turned the
+    # wrong way against the gyro and differed from the ICM-20948 by 180 deg about y.
+    return -hy, hx, hz
 
 
 class Mpu9250(Node):

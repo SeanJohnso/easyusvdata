@@ -13,8 +13,10 @@ from rclpy.node import Node
 from sensor_msgs.msg import MagneticField
 from smbus2 import SMBus
 
-XOUT0 = 0x00          # 9 bytes from here: X/Y/Z high bytes, XYZ low bits, temp, status
-STATUS = 0x08         # bit 0 Meas_M_Done (write 1 to clear)
+XOUT0 = 0x00          # 7 bytes from here: X/Y/Z high bytes, XYZ low bits
+STATUS = 0x08         # bit 0 Meas_M_Done (write 1 to clear). Read it on its own, before
+                      # the data: reading the data clears it (seen on the rig, 2026-11-22),
+                      # so a burst read 0x00-0x08 always shows "not done".
 CTRL0 = 0x09          # bit 0 TM_M (start measurement), bit 5 Auto_SR_en
 CTRL1 = 0x0A          # bandwidth [1:0], bit 7 SW_RST
 PRODUCT_ID = 0x2F     # reads 0x30
@@ -23,14 +25,19 @@ COUNTS_PER_GAUSS = 16384.0   # 18-bit, ±8 gauss
 NULL = 131072                # 18-bit zero field
 
 
-def parse(buf):
-    """9 bytes from XOUT0 -> (measurement done?, field in tesla)."""
-    b = buf
+def parse(b):
+    """7 bytes from XOUT0 -> field in tesla, in a right-handed frame.
+
+    The chip's own axes are left-handed (x, y as marked, z pointing down: silkscreen,
+    and confirmed on the rig 2026-11-22 against the board's gyro and the other
+    magnetometers), which no TF rotation can express, so z is negated here. The
+    published frame then has the marked x and y, and z up.
+    """
     x = b[0] << 10 | b[1] << 2 | (b[6] >> 6) & 0x03
     y = b[2] << 10 | b[3] << 2 | (b[6] >> 4) & 0x03
     z = b[4] << 10 | b[5] << 2 | (b[6] >> 2) & 0x03
     s = 1e-4 / COUNTS_PER_GAUSS
-    return bool(b[8] & 0x01), ((x - NULL) * s, (y - NULL) * s, (z - NULL) * s)
+    return (x - NULL) * s, (y - NULL) * s, -(z - NULL) * s
 
 
 class Mmc5983ma(Node):
@@ -68,9 +75,9 @@ class Mmc5983ma(Node):
                 self.setup()
                 self.ready = True
                 return
-            raw = self.bus.read_i2c_block_data(a, XOUT0, 9)
-            done, field = parse(raw)
+            done = self.bus.read_byte_data(a, STATUS) & 0x01
             if done:
+                field = parse(self.bus.read_i2c_block_data(a, XOUT0, 7))
                 self.bus.write_byte_data(a, STATUS, 0x01)   # clear Meas_M_Done
             self.bus.write_byte_data(a, CTRL0, 0x21)        # start the next measurement
         except OSError as e:

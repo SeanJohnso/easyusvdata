@@ -23,6 +23,13 @@ sudo apt install ros-jazzy-ublox-gps ros-jazzy-bno055 python3-smbus2 i2c-tools
 ```
 `icm20948_ros2` is built from source in `ros2_ws/src` (see CLAUDE.md, IMU section).
 
+GPS setup tool (needs `pyubx2`, which isn't packaged for apt):
+```bash
+cd ~/easyusvdata
+python3 -m venv --system-site-packages .venv
+.venv/bin/pip install pyubx2==1.4.1
+```
+
 In `/boot/firmware/config.txt` (check pins and names in `/boot/firmware/overlays/README`):
 ```
 dtparam=uart0=on            # GPIO14/15 -> /dev/ttyAMA0
@@ -32,7 +39,7 @@ dtoverlay=uart3-pi5         # GPIO8/9
 dtoverlay=uart4-pi5         # GPIO12/13
 dtparam=i2c_arm=on          # bus 1, GPIO2/3
 dtparam=i2c_arm_baudrate=400000
-dtoverlay=i2c3-pi5          # bus 3, GPIO6/7
+dtoverlay=i2c3-pi5,baudrate=400000   # bus 3, GPIO6/7
 ```
 Reboot, then check the device names and addresses against `rig.yaml`:
 ```bash
@@ -40,6 +47,19 @@ ls -l /dev/ttyAMA*
 i2cdetect -y 1
 i2cdetect -y 3
 ```
+
+## GPS setup (before each recording session)
+
+With the ROS GPS nodes stopped:
+```bash
+~/easyusvdata/.venv/bin/python ~/easyusvdata/tools/gps_setup.py [id ...]
+```
+For each module in `rig.yaml` it finds the current baud, switches it to 115200 with UBX + NMEA,
+5 Hz, sea dynamic model, NAV-PVT, NAV-SAT (1 Hz) and NMEA GGA/RMC/GST, leaves the constellations
+at the factory set, saves (BBR, and flash where the module has it), and prints the output rates.
+Boards without flash (SparkFun SAM-M8Q, SAM-M10Q) lose the settings when their backup cell runs
+flat, so run it every session; running it again is harmless. The ROS driver only listens
+(`config_on_startup: false`).
 
 ## Build and run
 

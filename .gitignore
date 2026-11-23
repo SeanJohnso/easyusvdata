@@ -4,7 +4,13 @@ CLAUDE.md
 # Recorded sensor data
 /data/
 
-# colcon build outputs
+# Python venv (pyubx2 for tools/gps_setup.py)
+/.venv/
+
+# colcon build outputs (ros2_ws/ or the repo root, whichever is built in)
+/build/
+/install/
+/log/
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/

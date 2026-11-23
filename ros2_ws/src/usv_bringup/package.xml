@@ -11,6 +11,7 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
   <exec_depend>ublox_gps</exec_depend>
   <exec_depend>bno055</exec_depend>
   <exec_depend>icm20948_ros2</exec_depend>

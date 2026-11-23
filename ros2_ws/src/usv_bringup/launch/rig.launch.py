@@ -56,6 +56,18 @@ def generate_launch_description():
     modules = []   # one list of nodes per module, started STAGGER s apart
 
     for gid, g in rig['gps'].items():
+        if g.get('driver') == 'nmea':
+            # nmea_navsat_driver publishes fix and vel relative to its namespace.
+            modules.append([Node(
+                package='nmea_navsat_driver',
+                executable='nmea_serial_driver',
+                name='nmea_navsat_driver',
+                namespace=f'gps/{gid}',
+                output='screen',
+                parameters=[os.path.join(CONFIG, g['config']),
+                            {'port': g['device'], 'baud': g['baud'], 'frame_id': f'gps_{gid}'}],
+            ), static_tf(f'gps_{gid}', g['position'])])
+            continue
         modules.append([Node(
             package='ublox_gps',
             executable='ublox_gps_node',
