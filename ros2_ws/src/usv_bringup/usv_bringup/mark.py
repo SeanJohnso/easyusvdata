@@ -5,8 +5,10 @@
 Run it in its own terminal while `ros2 bag record -a` is running. It walks through
 the steps of the chosen mode in a fixed order. Press Enter to start a step: its
 name is published on /mark (std_msgs/String). Timed steps end on their own with an
-`end` mark and a beep; untimed steps end when Enter is pressed again. Ctrl-C during
-a step publishes `abort`, and processing ignores that step.
+`end` mark and a beep; untimed steps end when Enter is pressed again. In `dynamic`
+mode a timed hold doesn't end at the beep: it ends (`end`) when Enter is pressed as
+the vehicle starts to turn, so driving is never timed and the driver sets the pace.
+Ctrl-C during a step publishes `abort`, and processing ignores that step.
 
 The processing scripts (postprocessing/calibrate.py and later) find the steps by
 these names, so keep them in sync when changing a mode.
@@ -45,8 +47,9 @@ MODES = {
 # Dynamic test (2026-11-23): 10 loops of the 36 x 54 ft course, direction alternating
 # every loop (cw, ccw, ...) so slow GPS walk doesn't look like a direction effect.
 # The vehicle stops at every corner BEFORE turning, square to the side just driven
-# (true heading = that side's direction), holds, then turns and drives on. Stops are 30 s;
-# one per loop is 60 s, at
+# (true heading = that side's direction), holds, then turns and drives on. Per corner:
+# Enter when stopped (mark `stop ...`), countdown, beep, Enter when starting the turn
+# (mark `end`). Holds are at least 30 s; one per loop is at least 60 s, at
 # corner 1, 2, 3, 4, 1 over the five loops of each direction, so each direction gets a
 # long stop at all four headings.
 # Corner 4 of each loop is the start corner. Marks: `stop <cw|ccw> L<loop> C<corner>`.
@@ -58,10 +61,10 @@ for _k in range(1, LOOPS + 1):
         _long = _c == (_k - 1) // 2 % 4 + 1
         MODES['dynamic'].append((
             f'stop {_d} L{_k} C{_c}', LONG_STOP if _long else STOP,
-            f'loop {_k}/{LOOPS} {_d.upper()}: drive to corner {_c}'
-            + (' (the start corner)' if _c == 4 else '')
-            + ', stop before turning, square to the tape; Enter once stopped'
-            + (' [LONG STOP]' if _long else '')))
+            f'loop {_k}/{LOOPS} {_d.upper()}: drive the leg to corner {_c}'
+            + (' (the start corner; then turn 180 for the next loop)' if _c == 4 else '')
+            + ', stop BEFORE turning, square to the tape'
+            + (' [LONG HOLD]' if _long else '')))
 MODES['dynamic'].append(('still', 120, 'at the start corner, square to the side just driven, still'))
 
 
@@ -70,6 +73,7 @@ def main():
         print(f'usage: ros2 run usv_bringup mark <{"|".join(MODES)}>')
         return
     steps = MODES[sys.argv[1]]
+    driver = sys.argv[1] == 'dynamic'   # holds end on Enter, not at the beep
     rclpy.init()
     node = rclpy.create_node('mark')
     pub = node.create_publisher(String, '/mark', 10)
@@ -82,7 +86,7 @@ def main():
         for i, (name, secs, what) in enumerate(steps, 1):
             print(f'\n[{i}/{len(steps)}] {name}: {what}'
                   + (f' ({secs} s)' if secs else ''))
-            input('   Enter to start ')
+            input('   Enter when stopped at the corner ' if name.startswith('stop') else '   Enter to start ')
             if pub.get_subscription_count() == 0:
                 print('   WARNING: nothing subscribes to /mark. Is the bag recording?')
             mark(name)
@@ -92,6 +96,9 @@ def main():
                         print(f'\r   {left:3d} s ', end='', flush=True)
                         time.sleep(1)
                     print('\r', end='')
+                    if driver:
+                        print('\a   HOLD DONE', flush=True)
+                        input('   Enter when you start the turn ')
                 else:
                     input('   Enter when done ')
             except KeyboardInterrupt:
