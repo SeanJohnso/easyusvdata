@@ -10,7 +10,11 @@ navsat_transform:
     transform_timeout: 0.0                  # s to wait for TF lookups
 
     # Heading used to align the GPS (UTM) frame with the map frame
-    magnetic_declination_radians: -0.1269   # 7.27 deg W (NOAA), east positive
+    # robot_localization ADDS this to the IMU's magnetic ENU yaw to get true (UTM) yaw, so it is
+    # MINUS the usual east-positive declination: 7.27 deg W (NOAA) -> +0.1269. It was -0.1269
+    # until 2026-11-23, which rotated GPS positions 14.5 deg against the IMU heading (seen in the
+    # dynamic replay: map-frame travel direction - EKF yaw = +14 to +18 deg on every straight).
+    magnetic_declination_radians: 0.1269
     yaw_offset: 0.0                         # IMU yaw already 0 = east
     use_odometry_yaw: false                 # true: take heading from the EKF instead of the IMU
 

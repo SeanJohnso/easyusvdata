@@ -18,6 +18,11 @@ CONFIG = os.path.join(get_package_share_directory('usv_bringup'), 'config')
 # (2026-11-22: ~4.9 V idle on this supply, undervoltage under a 2-core load).
 STAGGER = 1.0
 
+# GPS drivers restart this many seconds after dying. The ublox driver aborts when its
+# one MON-VER poll at start-up gets no reply (2026-11-23: the SAM-M8Q missed the whole
+# dynamic test that way); a retry usually works.
+GPS_RESPAWN_DELAY = 2.0
+
 # IMU driver name in rig.yaml -> (package, executable, address parameter name)
 IMU_DRIVERS = {
     'bno055': ('bno055', 'bno055', 'i2c_addr'),
@@ -64,6 +69,8 @@ def generate_launch_description():
                 name='nmea_navsat_driver',
                 namespace=f'gps/{gid}',
                 output='screen',
+                respawn=True,
+                respawn_delay=GPS_RESPAWN_DELAY,
                 parameters=[os.path.join(CONFIG, g['config']),
                             {'port': g['device'], 'baud': g['baud'], 'frame_id': f'gps_{gid}'}],
             ), static_tf(f'gps_{gid}', g['position'])])
@@ -74,6 +81,8 @@ def generate_launch_description():
             name='ublox_gps_node',
             namespace=f'gps/{gid}',
             output='screen',
+            respawn=True,
+            respawn_delay=GPS_RESPAWN_DELAY,
             parameters=[os.path.join(CONFIG, g['config']),
                         {'device': g['device'], 'uart1.baudrate': g['baud'],
                          'frame_id': f'gps_{gid}'}],
