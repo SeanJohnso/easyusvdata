@@ -25,6 +25,7 @@ setup(
             'check = usv_bringup.check:main',
             'ism330dhcx = usv_bringup.ism330dhcx:main',
             'lis3mdl = usv_bringup.lis3mdl:main',
+            'mark = usv_bringup.mark:main',
             'mmc5983ma = usv_bringup.mmc5983ma:main',
             'mpu9250 = usv_bringup.mpu9250:main',
         ],

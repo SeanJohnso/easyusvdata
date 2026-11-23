@@ -5,8 +5,11 @@
 # https://github.com/furbrain/icm20948_ros2/blob/main/src/icm20948_raw.cpp
 # Keep each value's type (int vs float) as written, or the node fails to start.
 #
-# Fixed in the driver (not parameters): accel/gyro sampled at 225 Hz with the
-# digital low-pass filter off, published at 200 Hz; magnetometer (AK09916) at
+# Fixed in the driver (not parameters): accel/gyro sampled at 225 Hz, published
+# at 200 Hz. Digital low-pass filter: off upstream (gyro noise ~1.4 deg/s in the
+# 2026-11-22 static bag); patch (written 2026-11-23, see CLAUDE.md) turns it on, accel 50.4 Hz /
+# gyro 51.2 Hz 3 dB (in src/icm20948_raw.cpp initialise()), like the MPU9250's
+# dlpf_cfg 3. Bags before that have it off. Magnetometer (AK09916) at
 # 100 Hz in passthrough mode, its axes already turned to match the accel/gyro.
 # No orientation is published, and every covariance in the messages is 0.
 /**:   # node imu/icm20948/icm20948, started by rig.launch.py
